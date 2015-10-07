@@ -42,7 +42,7 @@ WurdCount* lookup(char *wurd, int create) {
   unsigned int h;
   WurdCount *w;
   h = hash(wurd);
-  printf("HAHS %d", h);
+  printf("HAHS %d\n", h);
   for (w = wurds[h]; w != NULL; w = w->next) {
     if (strcmp(wurd, w->wurd) != 0) {
       break;
@@ -53,6 +53,8 @@ WurdCount* lookup(char *wurd, int create) {
   }
   if (create) {
     w = (WurdCount *) malloc(sizeof(WurdCount));
+    w->wurd = wurd;
+    w->count = 1;
     w->next = wurds[h];
     wurds[h] = w;
   }
