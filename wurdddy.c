@@ -63,51 +63,57 @@ WurdCount* lookup(char *wurd, int create) {
 char *cleanrrr(char *s)
 {
     char *cleanwurd;
+
     if ((cleanwurd = malloc(100 * sizeof(char))) == NULL) {
         printf("MEMORYD IED...!!!\n");
         exit(-1);
     }
+
+    // do i really need to do this? it seems to fix a bug with random chars sometimes appearing
+    int j;
+    for (j = 0; j < 99; j++)
+        cleanwurd[j] = 0;
+
     int cli; // cleanword array Index
     int i;
     int len = strlen(s);
     for (i = 0, cli = 0; i < len; i++) {
-        putchar(s[i]);
         status = regexec(&regex, &s[i], 1, pmatch, 0);
-        if (status == 1) {
+        if (status == 1)
             cleanwurd[cli++] = s[i];
-        }
     }
-    // printf("CLEAN WURD: %s\n", cleanwurd);
     return cleanwurd;
 }
 
 void build(FILE *fp) {
-    // build a hash array containing wurd count structs 
+    // build a hash array containing lists of wurd count structs 
     
     char buf[100], fmt[10];
     sprintf(fmt, "%%%lus", sizeof(buf)-1); // now fmt = "%99s"
 
+    if (regcomp(&regex, "[^a-z]", REG_ICASE|REG_EXTENDED) != 0) {
+        perror("Oooft, fucked that regex up");
+        exit(-1);
+    } // for use in cleanrrr 
+
     while (fscanf(fp, fmt, buf) != EOF) {
-        // printf("%s\n", buf);
         char *cleanwurd;
         cleanwurd = cleanrrr(buf);
-        //printf("%s\n", cleanwurd);
-
-        WurdCount *w;
-        //w = lookup(estrdup(buf), 1);
-        w = lookup(cleanwurd, 1);
-        w->count++;
+        if (strlen(cleanwurd) > 0) {
+            WurdCount *w;
+            w = lookup(cleanwurd, 1);
+            w->count++;
+        }
     }
     regfree(&regex);
 }
 
 void printCount(WurdCount *w) {
-    printf("%d : %s\n", w->count, w->wurd);
+    printf("%3d: %s\n", w->count, w->wurd);
 }
 
 void dump()
 {
-    // printf("WURD ZISE: %lu\n", sizeof(wurds));
     int i;
     WurdCount *w;
     for (i = 0; i < NHASH; i++) {
@@ -130,11 +136,6 @@ int main(int argc, char **argv)
     FILE *fp = fopen(argv[1], "r");
     if (fp == NULL)  {
         perror("FUCK THAT! ");
-        exit(-1);
-    }
-
-    if (regcomp(&regex, "[^a-z]", REG_ICASE|REG_EXTENDED) != 0) {
-        perror("Oooft, fucked that regex up");
         exit(-1);
     }
 
